@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="../plugins/elementui/index.css">
+    <link rel="stylesheet" href="../plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="shortcut icon" href="#"/>
+    <!-- import CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <style>
+        .el-header {
+            background-color: #B3C0D1;
+            color: #333;
+            text-align: left;
+            line-height: 60px;
+        }
+
+        .el-footer{
+            text-align: center;
+            background-color:#B3C0D1 ;
+            color: #333;
+            line-height: 60px;
+        }
+
+        .el-aside {
+            background-color: #D3DCE6;
+            color: #333;
+            text-align: center;
+            line-height: 200px;
+        }
+
+        .el-main {
+            background-color: #E9EEF3;
+            color: #333;
+            text-align: left;
+            line-height: 50px;
+        }
+
+        body > .el-container {
+            margin-bottom: 40px;
+        }
+
+        .el-container:nth-child(5) .el-aside,
+        .el-container:nth-child(6) .el-aside {
+            line-height: 260px;
+        }
+
+        .el-container:nth-child(7) .el-aside {
+            line-height: 320px;
+        }
+    </style>
+    <link rel="shortcut icon" href="#"/>
+    <title>图书管理系统</title>
+</head>
+
+<body>
+
+<div id="app">
+    <el-container>
+        <el-header>
+            <div>
+                <span style="font-size: xx-large" style="float: left">图书管理系统</span>
+                <span style="float: right"  style="font-size: smaller">当前登录:{{bookAdminInfo.username}}</span>
+            </div>
+        </el-header>
+        <el-main>
+            <div class="app-container">
+                <div class="content-header"  >
+                    <div style="text-align: left;line-height: 60px">
+                        <el-menu  class="el-menu-demo" mode="horizontal" >
+                            <el-menu-item index="1"><el-button plain @click="toBookAdmin">图书管理</el-button></el-menu-item>
+                            <el-menu-item index="2"><el-button plain @click="toBookAdmin_OverBook">图书催还</el-button></el-menu-item>
+                            <el-menu-item index="3"><el-button plain @click="toBookAdmin_LessBook">缺书通知</el-button></el-menu-item>
+                            <el-menu-item index="4"><el-button plain @click="">个人信息</el-button></el-menu-item>
+                        </el-menu>
+                    </div>
+                </div>
+
+                <div class="app-container" >
+                    <div class="box" >
+
+
+                        <el-divider content-position="center" style="line-height: normal">库存短缺书籍如下</el-divider>
+
+                        <!--                          库存短缺书籍列表-->
+                        <template>
+                            <el-table
+                                    :data="bookList"
+                                    stripe
+                                    style="width: 100%">
+
+                                <el-table-column
+                                        type="index"
+                                        label="序号"
+                                        width="100">
+                                </el-table-column>
+                                <el-table-column
+                                        prop="bookName"
+                                        label="书名"
+                                        width="180">
+                                </el-table-column>
+                                <el-table-column
+                                        prop="author"
+                                        label="作者"
+                                        width="180">
+                                </el-table-column>
+
+                                <el-table-column
+                                        prop="publishingHouse"
+                                        label="出版社">
+                                </el-table-column>
+                                <el-table-column
+                                        prop="num"
+                                        label="库存数量">
+                                </el-table-column>
+
+                                <el-table-column label="操作" align="center">
+
+                                    <template slot-scope="scope">
+
+                                        <el-button type="primary" size="mini" @click="handleUpdate(scope.row)">图书入库</el-button>
+
+                                    </template>
+
+                                </el-table-column>
+                            </el-table>
+                        </template>
+
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- 编辑标签弹层 -->
+                <div class="add-form">
+
+                    <el-dialog title="编辑图书" :visible.sync="dialogFormVisible4Edit">
+                        <el-form ref="form" :model="formData" label-width="80px">
+                            <el-form-item label="图书名称">
+                                <el-input v-model="formData.bookName"></el-input>
+                            </el-form-item>
+                            <el-form-item label="图书ISBN">
+                                <el-input v-model="formData.isbn"></el-input>
+                            </el-form-item>
+                            <el-form-item label="图书作者">
+                                <el-input v-model="formData.author"></el-input>
+                            </el-form-item>
+
+                            <el-form-item label="图书类别">
+                                <el-select v-model="formData.type" placeholder="请选择类别">
+                                    <el-option label="教科书" value="教科书"></el-option>
+                                    <el-option label="人文" value="人文"></el-option>
+                                    <el-option label="科普" value="科普"></el-option>
+                                    <el-option label="艺术" value="艺术"></el-option>
+                                </el-select>
+                            </el-form-item>
+
+                            <el-form-item label="出版社">
+                                <el-input v-model="formData.publishingHouse"></el-input>
+                            </el-form-item>
+                            <el-form-item label="出版时间">
+                                <el-col :span="11">
+                                    <el-date-picker type="date" placeholder="选择日期" v-model="formData.publicationDate" style="width: 100%;"></el-date-picker>
+                                </el-col>
+                            </el-form-item>
+
+                            <el-form-item label="库存数量">
+                                <el-input type="textarea" v-model="formData.num"></el-input>
+                            </el-form-item>
+
+                            <el-form-item label="简介">
+                                <el-input type="textarea" v-model="formData.brief"></el-input>
+                            </el-form-item>
+                            <el-form-item label="备注">
+                                <el-input v-model="formData.remark"></el-input>
+                            </el-form-item>
+                            <el-form-item>
+                                <el-button type="primary" @click="onUpdata">更改</el-button>
+                                <el-button @click="dialogFormVisible4Edit = false">取消</el-button>
+                            </el-form-item>
+                        </el-form>
+                    </el-dialog>
+                </div>
+
+            </div>
+        </el-main>
+    </el-container>
+</div>
+
+</body>
+
+
+<!-- import Vue before Element -->
+<script src="../js/vue.js"></script>
+<!-- import JavaScript -->
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script type="text/javascript" src="../js/jquery.min.js"></script>
+
+<script src="../js/axios-0.18.0.js"></script>
+<script>
+    new Vue({
+        el: '#app',
+
+        data:{
+
+            formData: {
+                bookName: '',
+                isbn: '',
+                author: '',
+                type: '',
+                publishingHouse:'',
+                publicationDate: '',
+                brief: '',
+                remark: '',
+                num:'',
+            },//表单数据
+
+            dialogFormVisible4Edit:false,
+            bookList:[],
+
+            bookAdminInfo:{
+                username:'',
+                password:'',
+            }
+
+        },
+
+        created() {
+            this.getAll();
+        },
+        methods:{
+
+            toBookAdmin(){
+                window.location.href = 'http://localhost/pages/bookadmin.html?username='+this.bookAdminInfo.username;
+            },
+            toBookAdmin_OverBook(){
+                window.location.href = 'http://localhost/pages/bookadmin_overtimebook.html?username='+this.bookAdminInfo.username;
+            },
+            toBookAdmin_LessBook(){
+                window.location.href = 'http://localhost/pages/bookadmin_lessbook.html?username='+this.bookAdminInfo.username;
+            },
+
+
+
+            getAll(){
+              this.GetRequest();
+
+              //获取库存短缺书籍信息
+
+                axios.put("/books/getLessBook").then((resp)=>{
+                    this.bookList=resp.data.data;
+                })
+            },
+
+            //用户信息初始化
+            GetRequest() {
+                var url = location.search; //获取url中"?"符后的字串
+                var theRequest = {};
+                if (url.indexOf("?") !== -1) {
+                    var str = url.substr(1);
+                    var strs = str.split("&");
+                    for (var i = 0; i < strs.length; i++) {
+                        theRequest[strs[i].split("=")[0]] = unescape(strs[i].split("=")[1]);
+                    }
+                }
+                this.bookAdminInfo.username=theRequest.username;
+            },
+
+
+            //弹出编辑窗口
+            handleUpdate(row) {
+
+                axios.get("/books/"+row.bookId).then((res)=>{
+                    if(res.data.flag&&res.data.data!=null){
+                        this.formData=res.data.data;
+                        this.dialogFormVisible4Edit=true;
+                    }else {
+                        this.$message.info("数据同步出错，已刷新");
+                        this.getAll();
+                    }
+                });
+            },
+
+            //修改
+            onUpdata() {
+                axios.put("/books",this.formData).then((res)=>{
+                    if(res.data.flag){
+                        this.dialogFormVisible4Edit=false;
+                        this.$message.success(res.data.msg);
+                    }else
+                        this.$message.error(res.data.msg);
+                }).finally(()=>{
+                    this.getAll();
+                })
+            },
+        }
+    })
+</script>
+
+</html>

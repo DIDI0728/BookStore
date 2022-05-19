@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <!-- import CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <style>
+        .el-header {
+            background-color: #B3C0D1;
+            color: #333;
+            text-align: center;
+            line-height: 60px;
+        }
+
+        .el-footer{
+            text-align: center;
+            background-color:#B3C0D1 ;
+            color: #333;
+            line-height: 60px;
+        }
+
+        .el-aside {
+            background-color: #D3DCE6;
+            color: #333;
+            text-align: center;
+            line-height: 200px;
+        }
+
+        .el-main {
+            background-color: #E9EEF3;
+            color: #333;
+            text-align: center;
+            line-height: 160px;
+        }
+
+        body > .el-container {
+            margin-bottom: 40px;
+        }
+
+        .el-container:nth-child(5) .el-aside,
+        .el-container:nth-child(6) .el-aside {
+            line-height: 260px;
+        }
+
+        .el-container:nth-child(7) .el-aside {
+            line-height: 320px;
+        }
+    </style>
+    <link rel="shortcut icon" href="#"/>
+
+    <title>图书管理系统</title>
+</head>
+
+<body>
+
+<div id="app">
+    <el-container style="min-width: 100%; min-height: 100%; position: absolute;">
+        <el-header >图书管理系统登录</el-header>
+        <el-main>
+            <el-form ref="form" :model="form" label-width="80px">
+                <el-form-item >
+                    <label style="text-align: center">角色选择</label>
+                    <el-select v-model="form.type" placeholder="请选择角色">
+                        <el-option label="系统管理员" value="sysadmin"></el-option>
+                        <el-option label="图书管理员" value="bookadmin"></el-option>
+                        <el-option label="借阅者" value="borrower"></el-option>
+                    </el-select>
+                </el-form-item>
+                <el-form-item style="text-align: center" >
+                    <label>用户名</label>
+                    <el-input v-model="form.username" style="width: 25%"></el-input>
+                </el-form-item>
+                <el-form-item style="text-align: center">
+                    <label>密码</label>
+                    <el-input v-model="form.password" style="width: 25%"></el-input>
+                </el-form-item>
+                <el-form-item style="text-align: center" >
+                    <label v-show="logStatus" style="color: red">登录失败！用户名或密码错误...</label>
+                </el-form-item>
+
+
+                <el-form-item>
+                    <el-button type="primary" @click="onSubmit">立即登录</el-button>
+                    <el-button>取消</el-button>
+                    <el-button type="text" @click="create">立即创建！</el-button>
+                </el-form-item>
+            </el-form>
+        </el-main>
+    </el-container>
+
+
+</div>
+
+
+
+
+
+</body>
+
+
+<!-- import Vue before Element -->
+<script src="../js/vue.js"></script>
+<!-- import JavaScript -->
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script type="text/javascript" src="../js/jquery.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+
+<script src="../js/axios-0.18.0.js"></script>
+<script>
+    var vue=new Vue({
+        el: '#app',
+
+        data:{
+
+            form: {
+                username: '',
+                password:'',
+                type:'',
+            },
+            logStatus:false,
+        },
+
+
+        methods:{
+
+            create(){
+                window.location.href='http://localhost/pages/creat.html';
+            },
+
+            onSubmit() {
+                axios.get("/login/" + this.form.type + "/" + this.form.username + "/" + this.form.password).then((resp) => {
+                    console.log(resp);
+                    if (resp.data.flag == true) {
+                        this.$message.success(resp.data.msg);
+                        this.logStatus = false;
+                        if(this.form.type=='sysadmin')
+                            window.location.href='http://localhost/pages/sysadmin.html?username='+this.form.username;
+                        else if(this.form.type=='bookadmin')
+                            window.location.href='http://localhost/pages/bookadmin.html?username='+this.form.username;
+                        else window.location.href='http://localhost/pages/borrower.html?username='+this.form.username;
+                        // this.$router.push({path:'http://localhost/pages/borrower.html',query: {username:this.username}});
+                    } else {
+                        this.$message.error(resp.data.msg);
+                        this.logStatus = true;
+                    }
+                })
+            },
+        }
+    })
+</script>
+
+</html>

@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="../plugins/elementui/index.css">
+    <link rel="stylesheet" href="../plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="shortcut icon" href="#"/>
+    <!-- import CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <style>
+        .el-header {
+            background-color: #B3C0D1;
+            color: #333;
+            text-align: left;
+            line-height: 60px;
+        }
+
+        .el-footer{
+            text-align: center;
+            background-color:#B3C0D1 ;
+            color: #333;
+            line-height: 60px;
+        }
+
+        .el-aside {
+            background-color: #D3DCE6;
+            color: #333;
+            text-align: center;
+            line-height: 200px;
+        }
+
+        .el-main {
+            background-color: #E9EEF3;
+            color: #333;
+            text-align: left;
+            line-height: 50px;
+        }
+
+        body > .el-container {
+            margin-bottom: 40px;
+        }
+
+        .el-container:nth-child(5) .el-aside,
+        .el-container:nth-child(6) .el-aside {
+            line-height: 260px;
+        }
+
+        .el-container:nth-child(7) .el-aside {
+            line-height: 320px;
+        }
+    </style>
+    <link rel="shortcut icon" href="#"/>
+    <title>图书管理系统</title>
+</head>
+
+<body>
+
+<div id="app">
+    <el-container>
+        <el-header>
+            <div>
+                <span style="font-size: xx-large" style="float: left">图书管理系统</span>
+                <span style="float: right"  style="font-size: smaller">当前登录:{{borrower.username}}</span>
+            </div>
+        </el-header>
+        <el-main>
+            <div class="app-container">
+                <div class="content-header"  >
+                    <div style="text-align: left;line-height: 60px">
+                        <el-menu  class="el-menu-demo" mode="horizontal" >
+                            <el-menu-item index="1"><el-button plain @click="toBorrower">图书借阅</el-button></el-menu-item>
+                            <el-menu-item index="2"><el-button plain @click="toBorrower_book">借阅信息</el-button></el-menu-item>
+                            <el-menu-item index="3"><el-button plain @click="toBookInfo">预订信息</el-button></el-menu-item>
+                            <el-menu-item index="4"><el-button plain @click="toBorrowerInfo">个人信息</el-button></el-menu-item>
+                        </el-menu>
+                    </div>
+                </div>
+
+                <div class="app-container" >
+                    <div class="box" >
+                        <div class="filter-container">
+                            <el-input placeholder="种类" v-model="pagination.type" style="width: 200px;height: 40px" class="filter-item"></el-input>
+                            <el-input placeholder="书名" v-model="pagination.bookName" style="width: 200px;;height: 40px" class="filter-item"></el-input>
+                            <el-input placeholder="书籍ISBN" v-model="pagination.isbn" style="width: 200px;;height: 40px" class="filter-item"></el-input>
+                            <el-button @click="getbookList" class="dalfBut">查询</el-button>
+                        </div>
+
+<!--                        图书列表-->
+                        <el-table size="large" current-row-key="id" :data="bookList" stripe highlight-current-row>
+
+                            <el-table-column type="index" align="center" label="序号"></el-table-column>
+                            <el-table-column prop="type" label="种类" align="center"></el-table-column>
+                            <el-table-column prop="bookName" label="书名" align="center"></el-table-column>
+                            <el-table-column prop="author" label="作者" align="center"></el-table-column>
+                            <el-table-column prop="publishingHouse" label="出版社" align="center"></el-table-column>
+<!--                            <el-table-column prop="isbn" label="书籍ISBN" align="center"></el-table-column>-->
+                            <el-table-column prop="num" label="剩余数量" align="center"></el-table-column>
+<!--                            <el-table-column prop="remark" label="备注" align="center"></el-table-column>-->
+                            <el-table-column label="操作" align="center">
+                                <template slot-scope="scope">
+                                    <el-button type="info" size="mini" @click="handleCheck(scope.row)">详情</el-button>
+                                    <el-button type="primary" size="mini" @click="LendBookView(scope.row)">借阅</el-button>
+                                    <el-button v-if="scope.row.num==0" type="success" size="mini" @click="Book(scope.row)">预订</el-button>
+                                </template>
+                            </el-table-column>
+
+                        </el-table>
+
+                        <!--分页组件-->
+                        <div class="pagination-container">
+
+                            <el-pagination
+                                    class="pagiantion"
+
+                                    @current-change="handleCurrentChange"
+
+                                    :current-page="pagination.currentPage"
+
+                                    :page-size="pagination.pageSize"
+
+                                    layout="total, prev, pager, next, jumper"
+
+                                    :total="pagination.total">
+
+                            </el-pagination>
+
+                        </div>
+
+
+                        <!-- 查看详情标签弹层 -->
+                        <div class="add-form">
+
+                            <el-dialog title="图书详情" :visible.sync="dialogFormVisible4Edit">
+                                <el-form ref="form" :model="formData" label-width="80px">
+                                    <el-form-item label="图书名称">
+                                        <el-input v-model="formData.bookName" :readonly="true" ></el-input>
+                                    </el-form-item>
+                                    <el-form-item label="图书ISBN">
+                                        <el-input v-model="formData.isbn" :readonly="true" ></el-input>
+                                    </el-form-item>
+                                    <el-form-item label="图书作者">
+                                        <el-input v-model="formData.author" :readonly="true"></el-input>
+                                    </el-form-item>
+
+                                    <el-form-item label="图书类别">
+                                        <el-input v-model="formData.type" :readonly="true"></el-input>
+                                    </el-form-item>
+
+                                    <el-form-item label="出版社">
+                                        <el-input v-model="formData.publishingHouse" :readonly="true"></el-input>
+                                    </el-form-item>
+                                    <el-form-item label="出版时间">
+                                        <el-input v-model="formData.publicationDate" :readonly="true"></el-input>
+                                    </el-form-item>
+
+
+                                    <el-form-item label="简介">
+                                        <el-input type="textarea" v-model="formData.brief" :readonly="true"></el-input>
+                                    </el-form-item>
+                                    <el-form-item label="备注">
+                                        <el-input v-model="formData.remark" :readonly="true"></el-input>
+                                    </el-form-item>
+                                    <el-form-item>
+                                        <el-button type="primary" @click="dialogFormVisible4Edit = false">确定</el-button>
+                                        <el-button @click="dialogFormVisible4Edit = false">取消</el-button>
+                                    </el-form-item>
+                                </el-form>
+
+                            </el-dialog>
+
+                        </div>
+
+
+<!--                        借阅书籍对话框-->
+                        <el-dialog title="图书借阅" :visible.sync="LendBookFormVisible">
+                            <el-descriptions class="margin-top" title="借阅人信息表" :column="3" >
+                                <el-descriptions-item label="卡号">{{borrower.id}}</el-descriptions-item>
+                                <el-descriptions-item label="用户名">{{borrower.username}}</el-descriptions-item>
+                                <el-descriptions-item label="姓名">{{borrower.name}}</el-descriptions-item>
+                                <el-descriptions-item label="学院">{{borrower.academy}}</el-descriptions-item>
+                                <el-descriptions-item label="班级">{{borrower.classname}}</el-descriptions-item>
+                                <el-descriptions-item label="联系方式">{{borrower.phone}}</el-descriptions-item>
+                            </el-descriptions>
+
+                            <el-descriptions class="margin-top" title="书籍信息表" :column="3" >
+                                <el-descriptions-item label="书名">{{formData.bookName}}</el-descriptions-item>
+                                <el-descriptions-item label="种类">{{formData.type}}</el-descriptions-item>
+                                <el-descriptions-item label="出版社">{{formData.publishingHouse}}</el-descriptions-item>
+                                <el-descriptions-item label="借阅时间">{{lendbookform.lendDate}}</el-descriptions-item>
+                                <el-descriptions-item label="归还时间">{{lendbookform.backDate}}</el-descriptions-item>
+                            </el-descriptions>
+                            <div slot="footer" class="dialog-footer">
+                                <el-button @click="LendBookFormVisible=false">取 消</el-button>
+                                <el-button type="primary" @click="LendBook">确 定</el-button>
+                            </div>
+                        </el-dialog>
+
+
+<!--                        预订书籍-->
+                        <el-dialog
+                                title="预订提示"
+                                :visible.sync="BookDialogVisible"
+                                width="30%"
+                                center>
+                            <span>确定要预订 {{rowBook.bookName}} 这本书吗？</span>
+                            <span slot="footer" class="dialog-footer">
+                                <el-button @click="BookDialogVisible = false">取 消</el-button>
+                                <el-button type="primary" @click="bookBook">确 定</el-button>
+                              </span>
+                        </el-dialog>
+
+                    </div>
+                </div>
+
+            </div>
+        </el-main>
+    </el-container>
+</div>
+
+</body>
+
+
+<!-- import Vue before Element -->
+<script src="../js/vue.js"></script>
+<!-- import JavaScript -->
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script type="text/javascript" src="../js/jquery.min.js"></script>
+
+<script src="../js/axios-0.18.0.js"></script>
+<script>
+    new Vue({
+        el: '#app',
+
+        data:{
+            currentDate:'',
+            backDate:'',
+            formLabelWidth: '120px',
+            LendBookFormVisible:false,//借阅视图
+            BookDialogVisible:false,//预订视图
+            date:'',
+
+            borrower:{
+                username:'',
+                id:'',
+                name:'',
+                academy: '',
+                phone:'',
+                classname: '',
+            },
+
+            tabPosition: 'left',
+            bookList: [],//当前页要展示的列表数据
+            dialogFormVisible4Edit:false,//编辑表单是否可见
+
+
+            rowBook:'',
+
+            formData: {
+                id:'',
+                bookName: '',
+                isbn: '',
+                author: '',
+                type: '',
+                publishingHouse:'',
+                publicationDate: '',
+                brief: '',
+                remark: '',
+                num:'',
+            },
+
+            pagination: {//分页相关模型数据
+                currentPage: 1,//当前页码
+                pageSize:10,//每页显示的记录数
+                total:0, //总记录数
+                bookName:"",
+                type:"",
+                isbn:""
+            },
+
+
+            lendbookform:{
+                bookId:'',
+                borrowerId:'',
+                lendDate:'',
+                backDate:'',
+            },
+
+            bookInfo:{
+                num:'',
+                bookId:'',
+                borrowerId:'',
+                bookName:'',
+                author:'',
+                publishingHouse:'',
+                bookDate:'',
+                status:'',
+            }
+
+        },
+
+        created() {
+            this.GetRequest();
+            this.getbookList();
+            this.currentDateStr=this.getCurrentDate();
+            this.DateStr=this.getDateStr(15);
+        },
+        methods:{
+
+            //页面跳转
+            toBorrowerInfo(){
+                window.location.href = 'http://localhost/pages/borrower_borrowerInf.html?username='+this.borrower.username;
+            },
+            toBookInfo(){
+                window.location.href = 'http://localhost/pages/borrower_bookInf.html?username='+this.borrower.username;
+            },
+            toBorrower(){
+                window.location.href = 'http://localhost/pages/borrower.html?username='+this.borrower.username;
+            },
+            toBorrower_book(){
+                window.location.href = 'http://localhost/pages/borrower_book.html?username='+this.borrower.username;
+            },
+
+
+            //借书
+            LendBook(){
+                this.lendbookform.borrowerId=this.borrower.id;
+                this.lendbookform.bookId=this.formData.bookId;
+
+                //查看是否已经借过该书
+                axios.put("/lendlist/ifExist/"+this.lendbookform.borrowerId+"/"+this.lendbookform.bookId).then((resp)=>{
+                    if(resp.data.flag===true){
+                        //该书已借阅过
+                        this.$message.error(resp.data.msg);
+                        this.LendBookFormVisible=false;
+                    }else {
+                        //该书还未借阅
+                        //判断库存该书数量
+                        axios.get("/books/ifempty/"+this.formData.bookId).then((resp)=>{
+                            if(resp.data.flag===true){
+                                //库存有书
+                                //添加借书信息
+                                axios.post("/lendlist/add",this.lendbookform).then((resp)=>{
+                                    if(resp.data.flag===true){
+                                        this.formData.num-1;
+                                        this.$message.success(resp.data.msg)
+                                        this.LendBookFormVisible=false
+                                    } else this.$message.error(resp.data.msg)
+                                });
+                                //库存-1
+                                axios.put("/books/upNum",this.formData).then((resp)=>{
+                                    this.getbookList();
+                                })
+
+                            }else {
+                                //库存无书
+                                this.$message.error("借阅失败，该书数量不足！");
+                            }
+                        })
+
+
+                    }
+                })
+
+
+
+            },
+
+
+            //预订
+            Book(row){
+                this.rowBook=row;
+                this.BookDialogVisible=true;
+            },
+
+            bookBook(){
+                this.bookInfo.borrowerId=this.borrower.id;
+                this.bookInfo.bookName=this.rowBook.bookName;
+                this.bookInfo.author=this.rowBook.author;
+                this.bookInfo.publishingHouse=this.rowBook.publishingHouse;
+                this.bookInfo.bookId=this.rowBook.id;
+                this.bookInfo.bookDate=this.getCurrentDate();
+                this.bookInfo.status='正在预订...'
+
+
+                //判断是否已经预订过该书
+                axios.put("/bookInfo/ifExist/"+this.bookInfo.borrowerId+"/"+this.bookInfo.bookId).then((resp)=>{
+                    if(resp.data.flag===true) {
+                        //已预订过该书
+                        this.$message.error(resp.data.msg);
+                        this.BookDialogVisible=false;
+                    }else {
+                        //还未预订过该书
+                        axios.post("/bookInfo/add",this.bookInfo).then((resp)=>{
+                            if(resp.data.flag===true){
+                                this.BookDialogVisible=false;
+                                this.$message.success(resp.data.msg);
+                                this.getbookList();
+                            }else {
+                                this.$message.error(resp.data.msg);
+                                this.BookDialogVisible=false;
+                                this.getbookList();
+                            }
+                        })
+                    }
+                })
+
+            },
+
+            //获取当前日期
+            getCurrentDate: function () {
+                let dd = new Date();
+                dd.getDate();
+                return dd.toLocaleDateString();
+            },
+
+            //获取当前日期后几天日期
+            getDateStr(dayCount) {
+                let dd = new Date()
+                dd.setDate(dd.getDate() + dayCount)
+                // let time = dd.getTime()
+                // return time + ''
+                return dd.toLocaleDateString();
+            },
+
+            //用户信息初始化
+            GetRequest() {
+                var url = location.search; //获取url中"?"符后的字串
+                var theRequest = {};
+                if (url.indexOf("?") !== -1) {
+                    var str = url.substr(1);
+                    var strs = str.split("&");
+                    for (var i = 0; i < strs.length; i++) {
+                        theRequest[strs[i].split("=")[0]] = unescape(strs[i].split("=")[1]);
+                    }
+                }
+                this.borrower.username=theRequest.username;
+                axios.post("/borrower",this.borrower).then((resp)=>{
+                    this.borrower=resp.data.data;
+                })
+
+            },
+
+
+            //获取书籍列表
+            getbookList(){
+                var param="?bookName="+this.pagination.bookName;
+                param+="&type="+this.pagination.type;
+                param+="&isbn="+this.pagination.isbn;
+
+                axios.get("/books/"+this.pagination.currentPage+"/"+this.pagination.pageSize+param).then((res)=>{
+                    this.bookList=res.data.data.records;
+                    this.pagination.total=res.data.data.total;
+                    this.pagination.currentPage=res.data.data.current;
+                });
+
+            },
+
+            //查看详情
+            handleCheck(row){
+                axios.get("/books/"+row.bookId).then((res)=>{
+                    if(res.data.flag&&res.data.data!=null){
+                        this.formData=res.data.data;
+                        this.dialogFormVisible4Edit=true;
+                    }else {
+                        this.$message.info("数据同步出错，已刷新");
+                        this.getbookList();
+                    }
+                });
+            },
+
+
+            //查看书籍借阅信息
+            LendBookView(row){
+                this.lendbookform.lendDate=this.getCurrentDate();
+
+                this.lendbookform.backDate=this.getDateStr(30);
+
+                this.formData=row;
+
+                this.LendBookFormVisible=true;
+             },
+
+            //取消
+            cancel(){
+                this.dialogFormVisible=false;
+                this.dialogFormVisible4Edit=false;
+                this.$message.info("操作取消!");
+            },
+
+
+            //切换页码
+            handleCurrentChange(currentPage) {
+                this.pagination.currentPage=currentPage;
+                this.getbookList();
+            },
+        }
+    })
+</script>
+
+</html>

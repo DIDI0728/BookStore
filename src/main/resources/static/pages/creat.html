@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <!-- import CSS -->
+    <link rel="stylesheet" href="../plugins/elementui/index.css">
+    <style>
+        .el-header {
+            background-color: #B3C0D1;
+            color: #333;
+            text-align: center;
+            line-height: 60px;
+        }
+
+        .el-footer{
+            text-align: center;
+            background-color:#B3C0D1 ;
+            color: #333;
+            line-height: 60px;
+        }
+
+        .el-aside {
+            background-color: #D3DCE6;
+            color: #333;
+            text-align: center;
+            line-height: 200px;
+        }
+
+        .el-main {
+            background-color: #E9EEF3;
+            color: #333;
+            text-align: center;
+            line-height: 160px;
+        }
+
+        body > .el-container {
+            margin-bottom: 40px;
+        }
+
+        .el-container:nth-child(5) .el-aside,
+        .el-container:nth-child(6) .el-aside {
+            line-height: 260px;
+        }
+
+        .el-container:nth-child(7) .el-aside {
+            line-height: 320px;
+        }
+    </style>
+    <link rel="shortcut icon" href="#"/>
+
+    <title>图书管理系统</title>
+</head>
+
+<body>
+
+<div id="app">
+    <el-container style="min-width: 100%; min-height: 100%; position: absolute;">
+        <el-header style="text-align: left" >用户创建页面</el-header>
+        <el-main>
+
+
+            <el-form :model="userForm" :rules="rules" ref="userForm" label-width="100px" class="demo-userForm" style="position: unset">
+
+
+                <el-divider content-position="center" style="line-height: normal">---------------------------基本信息--------------------------</el-divider>
+
+                <el-form-item style="text-align: center" prop="academy">
+                    <label>学院</label>
+                    <el-select v-model="userForm.academy" placeholder="请选择学院">
+                        <el-option label="计算机学院" value="计算机学院"></el-option>
+                        <el-option label="材化学院" value="材化学院"></el-option>
+                        <el-option label="体育学院" value="体育学院"></el-option>
+                        <el-option label="艺术与设计学院" value="艺术与设计学院"></el-option>
+                        <el-option label="外国语学院" value="外国语学院"></el-option>
+                    </el-select>
+                </el-form-item>
+
+                <el-form-item style="text-align: center" prop="classname">
+                    <label>班级</label>
+                    <el-input v-model="userForm.classname" placeholder="19级软工x班" style="width: 30%"></el-input>
+                </el-form-item>
+
+                <el-form-item style="text-align: center" prop="name">
+                    <label>姓名</label>
+                    <el-input v-model="userForm.name" style="width: 30%;"></el-input>
+                </el-form-item>
+
+                <el-form-item style="text-align: center" prop="phone">
+                    <label>联系电话</label>
+                    <el-input v-model.number="userForm.phone" style="width: 30%;"></el-input>
+                </el-form-item>
+
+
+                <el-divider content-position="center" style="line-height: normal">---------------------------以下为借阅证信息--------------------------</el-divider>
+
+                <el-form-item style="text-align: center" prop="username">
+                    <label>学号</label>
+                    <el-input v-model.number="userForm.username" placeholder="10位数字" style="width: 30%;"></el-input>
+                </el-form-item>
+
+
+                <el-form-item style="text-align: center" prop="password">
+                    <label>密码</label>
+                    <el-input v-model="userForm.password" placeholder="6~10位数字或字母" style="width: 30%;"></el-input>
+                </el-form-item>
+
+                <el-form-item>
+                    <el-button type="primary" @click="submitForm('userForm')">立即创建</el-button>
+                    <el-button @click="resetForm('userForm')">重置</el-button>
+                </el-form-item>
+            </el-form>
+
+
+
+        </el-main>
+    </el-container>
+
+
+</div>
+
+
+
+
+
+</body>
+
+
+<!-- import Vue before Element -->
+<script src="../js/vue.js"></script>
+<!-- import JavaScript -->
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script type="text/javascript" src="../js/jquery.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+
+<script src="../js/axios-0.18.0.js"></script>
+<script>
+    var vue=new Vue({
+        el: '#app',
+
+        data:{
+            userForm: {
+                academy:'',
+                classname:'',
+                name:'',
+                phone:'',
+                username:'',
+                password:'',
+            },
+            rules: {
+                academy: [
+                    { required: true, message: '请选择学院', trigger: 'blur' },
+                ],
+                classname: [
+                    { required: true, message: '请填写所在班级', trigger: 'blur' },
+                ],
+                name: [
+                    { required: true, message: '请填写姓名', trigger: 'blur' },
+                ],
+                phone: [
+                    { required: true, message: '请填写联系电话', trigger: 'blur' },
+                    {type:'number',message: '必须全为数字',trigger: 'blur'},
+                ],
+                username: [
+                    { required: true, message: '请填写学号', trigger: 'blur' },
+                    {type:'number',message: '必须全为数字',trigger: 'blur'},
+                ],
+                password: [
+                    { required: true, message: '请填写密码', trigger: 'blur' },
+                    { min: 6, max: 10, message: '长度在 6 到 10 个字符', trigger: 'blur' }
+                ],
+
+            },
+
+        },
+
+        methods:{
+            submitForm(formName) {
+                this.$refs[formName].validate((valid) => {
+                    if (valid) {
+                        axios.post("/borrower/add",this.userForm).then((resp)=>{
+                            console.log(resp);
+                            if(resp.data.flag==true){
+                                window.location.href='http://localhost/pages/login.html?'
+                            }else{
+                                this.$message.error(resp.data.msg+",用户名已存在!");
+                            }
+                        })
+                    } else {
+                        this.$message.error("创建失败,输入不规范!");
+                        return false;
+                    }
+                });
+            },
+            resetForm(formName) {
+                this.$refs[formName].resetFields();
+            }
+        }
+    })
+</script>
+
+</html>

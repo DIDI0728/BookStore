@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="../plugins/elementui/index.css">
+    <link rel="stylesheet" href="../plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="shortcut icon" href="#"/>
+    <!-- import CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <style>
+
+        .el-header {
+            background-color: #B3C0D1;
+            color: #333;
+            text-align: left;
+            line-height: 60px;
+        }
+
+        .el-footer{
+            text-align: center;
+            background-color:#B3C0D1 ;
+            color: #333;
+            line-height: 60px;
+        }
+
+        .el-aside {
+            background-color: #D3DCE6;
+            color: #333;
+            text-align: center;
+            line-height: 200px;
+        }
+
+        .el-main {
+            background-color: #E9EEF3;
+            color: #333;
+            text-align: left;
+            height: 100%;
+
+        }
+
+        body > .el-container {
+            margin-bottom: 40px;
+        }
+
+        .el-container:nth-child(5) .el-aside,
+        .el-container:nth-child(6) .el-aside {
+            line-height: 260px;
+        }
+
+        .el-container:nth-child(7) .el-aside {
+            line-height: 320px;
+        }
+    </style>
+    <link rel="shortcut icon" href="#"/>
+    <title>图书管理系统</title>
+</head>
+
+<body>
+
+<div id="app" >
+    <el-container>
+        <el-header>
+            <div>
+                <span style="font-size: xx-large" style="float: left">图书管理系统</span>
+                <span style="float: right"  style="font-size: smaller">当前登录:{{userForm.username}}</span>
+            </div>
+        </el-header>
+        <el-main>
+            <div class="app-container">
+                <div class="content-header"  >
+                    <div style="text-align: left;line-height: 60px">
+                        <el-menu  class="el-menu-demo" mode="horizontal" >
+                            <el-menu-item index="1"><el-button plain @click="toBorrower">图书借阅</el-button></el-menu-item>
+                            <el-menu-item index="2"><el-button plain @click="toBorrower_book">个人借阅信息</el-button></el-menu-item>
+                            <el-menu-item index="3">
+                                    <el-button plain @click="toBookInf">预订信息</el-button>
+                            </el-menu-item>
+                            <el-menu-item index="4"><el-button plain @click="toBorrowerInfo">个人信息</el-button></el-menu-item>
+                        </el-menu>
+                    </div>
+                </div>
+
+                <div class="app-container" >
+                    <div class="box" >
+                      <div>
+                          <el-descriptions title="个人信息" style="line-height: 30px">
+                              <el-descriptions-item style="width: 60%" label="姓名">{{userForm.name}}</el-descriptions-item>
+                              <el-descriptions-item style="width: 60%" label="学院">{{userForm.academy}}</el-descriptions-item>
+                              <el-descriptions-item style="width: 60%" label="班级">{{userForm.classname}}</el-descriptions-item>
+                              <el-descriptions-item style="width: 60%" label="联系电话">{{userForm.phone}}</el-descriptions-item>
+                          </el-descriptions>
+
+                          <el-divider content-position="center" style="line-height: normal">预订信息如下</el-divider>
+
+
+<!--                          借书列表-->
+                          <template>
+                              <el-table
+                                      :data="bookList"
+                                      stripe
+                                      style="width: 100%">
+
+                                  <el-table-column
+                                          type="index"
+                                          label="预订序号"
+                                          width="100">
+                                  </el-table-column>
+                                  <el-table-column
+                                          prop="bookName"
+                                          label="书名"
+                                          width="180">
+                                  </el-table-column>
+                                  <el-table-column
+                                          prop="author"
+                                          label="作者"
+                                          width="180">
+                                  </el-table-column>
+
+                                  <el-table-column
+                                          prop="bookDate"
+                                          label="发起预订时间">
+                                  </el-table-column>
+                                  <el-table-column
+                                          prop="num"
+                                          label="当前库存">
+                                  </el-table-column>
+
+                                  <el-table-column
+                                          prop="status"
+                                          label="状态">
+                                  </el-table-column>
+                                  <el-table-column label="操作" align="center">
+
+                                      <template slot-scope="scope">
+
+                                          <el-button type="primary" size="mini" @click="lendBook(scope.row)">借阅</el-button>
+
+                                          <el-button type="danger" size="mini" @click="deleteInfo(scope.row)">取消预订</el-button>
+
+                                      </template>
+
+                                  </el-table-column>
+                              </el-table>
+                          </template>
+
+                      </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+        </el-main>
+    </el-container>
+</div>
+
+</body>
+
+
+<!-- import Vue before Element -->
+<script src="../js/vue.js"></script>
+<!-- import JavaScript -->
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script type="text/javascript" src="../js/jquery.min.js"></script>
+
+<script src="../js/axios-0.18.0.js"></script>
+
+<script>
+    new Vue({
+        el: '#app',
+
+        data:{
+            userForm:{
+                id:'',
+                username:'',
+                password:'',
+                academy:'',
+                classname:'',
+                phone:'',
+                name:'',
+            },
+
+            bookList:[],
+
+            tabPosition: 'left',
+
+            pagination: {//分页相关模型数据
+                currentPage: 1,//当前页码
+                pageSize:10,//每页显示的记录数
+                total:0, //总记录数
+                bookName:"",
+                type:"",
+                isbn:""
+            },
+
+
+        },
+
+        created() {
+
+            this.getAll();
+
+
+        },
+        methods:{
+
+            //页面跳转
+            toBorrowerInfo(){
+                window.location.href = 'http://localhost/pages/borrower_borrowerInf.html?username='+this.userForm.username;
+            },
+            toBookInf(){
+                window.location.href = 'http://localhost/pages/borrower_bookInf.html?username='+this.userForm.username;
+            },
+            toBorrower(){
+                window.location.href = 'http://localhost/pages/borrower.html?username='+this.userForm.username;
+            },
+            toBorrower_book(){
+                window.location.href = 'http://localhost/pages/borrower_book.html?username='+this.userForm.username;
+            },
+
+            //获取当前日期
+            getCurrentDate: function () {
+                let dd = new Date();
+                dd.getDate();
+                return dd.toLocaleDateString();
+            },
+
+            //获取当前日期后几天日期
+            getDateStr(dayCount) {
+                let dd = new Date()
+                dd.setDate(dd.getDate() + dayCount)
+                // let time = dd.getTime()
+                // return time + ''
+                return dd.toLocaleDateString();
+            },
+
+
+
+            getAll(){
+                this.GetRequest();
+                this.getInf();
+            },
+
+
+            //获取当前用户个人信息
+            getInf(){
+              axios.post("/borrower",this.userForm).then((resp)=>{
+                  this.userForm=resp.data.data;
+                  axios.get("/bookInfo/getAll/"+this.userForm.id).then((resp)=>{
+                      if(resp.data.flag==true){
+                          this.bookList=resp.data.data;
+                      }else {
+                          this.$message.error("获取消息失败！");
+                      }
+                  });
+              });
+            },
+
+
+            //获取url路径参数
+            GetRequest() {
+                var url = location.search; //获取url中"?"符后的字串
+                var theRequest = new Object();
+                if (url.indexOf("?") != -1) {
+                    var str = url.substr(1);
+                    strs = str.split("&");
+                    for (var i = 0; i < strs.length; i++) {
+                        theRequest[strs[i].split("=")[0]] = unescape(strs[i].split("=")[1]);
+                    }
+                }
+                this.userForm.username=theRequest.username;
+            },
+
+            lendBook(row){
+                console.log(row);
+            },
+
+            deleteInfo(row){
+                axios.post("/bookInfo/delete",row).then((resp)=>{
+                    if(resp.data.flag==true){
+                        this.$message.success(resp.data.msg);
+                        this.getAll();
+                    }else {
+                        this.$message.error(resp.data.msg);
+                        this.getAll();
+                    }
+                })
+            },
+
+
+        }
+    })
+</script>
+
+</html>
